@@ -8,19 +8,27 @@
 var ipc = require('electron').ipcRenderer;
 
 ipc.on('menu-event', function(event, id) {
-	console.log("------ Renderer menu-event, id = ", id);
-	//console.log("Event = ");
-	//console.dir(event);
+	console.log("------ Renderer: menu-event, id = ", id);
+	if (id === "test_func1") {
+		test_func();
+	}
 })
 
+function test_func() {
+	console.log("------ Renderer: test function");
+}
+
 function key_down(evt) {
-	console.log("------ Renderer Key down");
-	//console.dir(evt);
+	console.log("------ Renderer: Key down");
+
+	// T
+	if (evt.keyCode === 84) {
+		test_func();
+	}
 }
 
 function key_up(evt) {
-	//console.log("Renderer Key up, evt = ");
-	//console.dir(evt);
+	console.log("------ Renderer: Key up, evt.keyCode = ", evt.keyCode);
 }
 
 window.addEventListener('keydown', key_down, false);

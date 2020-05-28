@@ -14,7 +14,7 @@ function on_menu_item_click(menu_item, window, event) {
     } else if (menu_item.id === 'quit') {
       app.quit()
     } else {
-      console.log("======= Main process: Sending event to Renderer");
+      console.log("====== Main: event -> renderer");
       _main_win.webContents.send('menu-event', menu_item.id)
     }
 }
