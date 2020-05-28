@@ -1,22 +1,76 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, Menu} = require('electron')
 const path = require('path')
+
+var _main_win;
+
+function show_about() {
+  console.log("About application");
+}
+
+function on_menu_item_click(menu_item, window, event) {
+    if (menu_item.id === 'about') {
+      show_about()
+    } else if (menu_item.id === 'quit') {
+      app.quit()
+    } else {
+      console.log("======= Main process: Sending event to Renderer");
+      _main_win.webContents.send('menu-event', menu_item.id)
+    }
+}
+
+function create_menus() {
+  var app_menu = {
+    label: "Test App",
+    submenu: [
+      {
+        id: "about",
+        label: "About Test App",
+        click: on_menu_item_click
+      },
+      { type: 'separator' },
+      {
+        id: "test_func1",
+        accelerator: 'Ctrl+T',
+        label: "Test function 1",
+        click: on_menu_item_click
+      },
+      { type: 'separator' },
+      {
+        id: "quit",
+        accelerator: 'CmdOrCtrl+Q',
+        label: "Quit Test App",
+        click: on_menu_item_click
+      },
+    ],
+  };
+
+  var menu_template = [
+    app_menu
+  ];
+
+	const menu = Menu.buildFromTemplate(menu_template)
+	Menu.setApplicationMenu(menu)
+}
 
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  _main_win = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
+      nodeIntegration: true,
       preload: path.join(__dirname, 'preload.js')
     }
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  _main_win.loadFile('index.html')
+
+  create_menus();
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  _main_win.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
