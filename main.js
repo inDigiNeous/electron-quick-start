@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, Menu} = require('electron')
+const {app, BrowserWindow, Menu, dialog} = require('electron')
 const path = require('path')
 
 var _main_win;
@@ -13,9 +13,8 @@ function on_menu_item_click(menu_item, window, event) {
       show_about()
     } else if (menu_item.id === 'quit') {
       app.quit()
-    } else {
-      console.log("====== Main: event -> renderer");
-      _main_win.webContents.send('menu-event', menu_item.id)
+    } else if (menu_item.id === 'open_file') {
+      show_load_file_dialog()
     }
 }
 
@@ -30,11 +29,18 @@ function create_menus() {
       },
       { type: 'separator' },
       {
-        id: "test_func1",
-        accelerator: 'Ctrl+T',
-        label: "Test function 1",
+        id: "open_file",
+        accelerator: 'CmdOrCtrl+O',
+        label: "Open...",
         click: on_menu_item_click
       },
+			{
+				label: 'Open Recent',
+				role: 'recentDocuments',
+				submenu: [
+					{ role: 'clearRecentDocuments' }
+				]
+			},
       { type: 'separator' },
       {
         id: "quit",
@@ -53,7 +59,27 @@ function create_menus() {
 	Menu.setApplicationMenu(menu)
 }
 
-function createWindow () {
+function show_load_file_dialog() {
+  const DIALOG_TXT_FILTER = { name: 'Text file', extensions: ['txt'] }
+	const options = {
+		title: 'Load scene from file',
+		filters: [ DIALOG_TXT_FILTER ]
+	}
+
+	let choice = dialog.showOpenDialog(_main_win, options)
+	choice.then(result => {
+		if (result.canceled !== true) {
+			// Get the file path from the dialog.
+			const path = result.filePaths[0]
+			if (path !== undefined) {
+        console.log(`Pretending to open ${path}`)
+        app.addRecentDocument(path)
+			}
+		}
+	})
+}
+
+function create_main_window () {
   // Create the browser window.
   _main_win = new BrowserWindow({
     width: 800,
@@ -70,19 +96,19 @@ function createWindow () {
   create_menus();
 
   // Open the DevTools.
-  _main_win.webContents.openDevTools();
+ // _main_win.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow()
+  create_main_window()
   
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) create_main_window()
   })
 })
 
@@ -92,6 +118,3 @@ app.on('window-all-closed', function () {
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') app.quit()
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
